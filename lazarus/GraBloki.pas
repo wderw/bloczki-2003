@@ -85,6 +85,7 @@ type
     function CzyCeglyNakladajaSie(const PierwszaCegla,
       DrugaCegla: Cegla): Boolean;
     function CzyMoznaObrocic(const ObroconaCegla: Cegla): Boolean;
+    procedure UsunWypelnioneWiersze;
   public
     { Public declarations }
   end;
@@ -101,7 +102,7 @@ uses GraBlok2, Grablok3;
 const LMarg      = 10;
       PMarg      = 70;                             // prawy na owocki
       GMarg      = 10;
-      MaxLiczbaC = 600;                            // max. liczba cegie�ek
+      MaxLiczbaC = 3000;                           // max. liczba cegie�ek
 
 var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegie�ki
       NrCegielki : Integer;                        // numer aktualnej cegie�ki
@@ -418,6 +419,256 @@ begin
   end;
 end;
 
+procedure TForm1.UsunWypelnioneWiersze;
+const
+  MaksymalnyRozmiarPlanszy = 100;
+type
+  TPlanszaIndeksow = array[0..MaksymalnyRozmiarPlanszy-1,
+    0..MaksymalnyRozmiarPlanszy-1] of Integer;
+  TPlanszaKolorow = array[0..MaksymalnyRozmiarPlanszy-1,
+    0..MaksymalnyRozmiarPlanszy-1] of TColor;
+  TPlanszaOdwiedzonych = array[0..MaksymalnyRozmiarPlanszy-1,
+    0..MaksymalnyRozmiarPlanszy-1] of Boolean;
+  TListaKomorek = array[1..MaksymalnyRozmiarPlanszy*
+    MaksymalnyRozmiarPlanszy] of TPoint;
+  TKrawedz = record
+    Poczatek: TPoint;
+    Koniec: TPoint;
+  end;
+  TListaKrawedzi = array[1..40] of TKrawedz;
+var
+  IndeksyPol: TPlanszaIndeksow;
+  KoloryPol: TPlanszaKolorow;
+  OdwiedzonePola: TPlanszaOdwiedzonych;
+  WierszPelny: array[0..MaksymalnyRozmiarPlanszy-1] of Boolean;
+  KoloryCegiel: array[1..MaxLiczbaC] of TColor;
+  Kolejka: TListaKomorek;
+  Krawedzie: TListaKrawedzi;
+  LiczbaKolumn, LiczbaWierszy: Integer;
+  Indeks, IndeksPunktu, Kolumna, Wiersz: Integer;
+  MinX, MaxX, MinY, MaxY: Integer;
+  MinKolumna, MaxKolumna, MinWiersz, MaxWiersz: Integer;
+  ZrodloWiersza, DocelowyWiersz: Integer;
+  GlowaKolejki, OgonKolejki, LiczbaKrawedzi: Integer;
+  IndeksKrawedzi, NastepnaKrawedz, LiczbaPunktow: Integer;
+  NumerCegly: Integer;
+  X, Y: Integer;
+  PunktPoczatkowy, PunktKoncowy: TPoint;
+  ZnalezionoWiersz, ZnalezionoKrawedz: Boolean;
+  KrawedzUzyta: array[1..40] of Boolean;
+
+  procedure DodajKrawedz(const Poczatek, Koniec: TPoint);
+  begin
+    if LiczbaKrawedzi=High(Krawedzie) then
+      raise Exception.Create('Za duzo krawedzi podczas usuwania wiersza.');
+    Inc(LiczbaKrawedzi);
+    Krawedzie[LiczbaKrawedzi].Poczatek:=Poczatek;
+    Krawedzie[LiczbaKrawedzi].Koniec:=Koniec;
+  end;
+
+begin
+  LiczbaKolumn:=MaxSzer div SzerC;
+  LiczbaWierszy:=(Form1.ClientHeight-GMarg) div SzerC;
+  if (LiczbaKolumn>MaksymalnyRozmiarPlanszy) or
+     (LiczbaWierszy>MaksymalnyRozmiarPlanszy) then
+    raise Exception.Create('Plansza jest za duza do usuwania wierszy.');
+  if (LiczbaKolumn=0) or (LiczbaWierszy=0) then Exit;
+
+  FillChar(IndeksyPol,SizeOf(IndeksyPol),0);
+  FillChar(OdwiedzonePola,SizeOf(OdwiedzonePola),0);
+  for Wiersz:=0 to LiczbaWierszy-1 do
+  begin
+    WierszPelny[Wiersz]:=False;
+    for Kolumna:=0 to LiczbaKolumn-1 do
+      KoloryPol[Kolumna,Wiersz]:=clSilver;
+  end;
+  for Indeks:=1 to NrCegielki do
+    KoloryCegiel[Indeks]:=Cegielki[Indeks].Kolor;
+
+  for Indeks:=1 to NrCegielki do
+    if Cegielki[Indeks].LP>0 then
+    begin
+      MinX:=Cegielki[Indeks].P[1].X;
+      MaxX:=MinX;
+      MinY:=Cegielki[Indeks].P[1].Y;
+      MaxY:=MinY;
+      for IndeksPunktu:=2 to Cegielki[Indeks].LP do
+      begin
+        MinX:=Min(MinX,Cegielki[Indeks].P[IndeksPunktu].X);
+        MaxX:=Max(MaxX,Cegielki[Indeks].P[IndeksPunktu].X);
+        MinY:=Min(MinY,Cegielki[Indeks].P[IndeksPunktu].Y);
+        MaxY:=Max(MaxY,Cegielki[Indeks].P[IndeksPunktu].Y);
+      end;
+      MinKolumna:=Max(0,(MinX-LMarg) div SzerC);
+      MaxKolumna:=Min(LiczbaKolumn-1,(MaxX-LMarg-1) div SzerC);
+      MinWiersz:=Max(0,(MinY-GMarg) div SzerC);
+      MaxWiersz:=Min(LiczbaWierszy-1,(MaxY-GMarg-1) div SzerC);
+      for Wiersz:=MinWiersz to MaxWiersz do
+        for Kolumna:=MinKolumna to MaxKolumna do
+          if CzyPunktWewnatrzCegly(Cegielki[Indeks],
+            LMarg+Kolumna*SzerC+(SzerC div 2),
+            GMarg+Wiersz*SzerC+(SzerC div 2)) then
+          begin
+            IndeksyPol[Kolumna,Wiersz]:=Indeks;
+            KoloryPol[Kolumna,Wiersz]:=Cegielki[Indeks].Kolor;
+          end;
+    end;
+
+  ZnalezionoWiersz:=False;
+  for Wiersz:=0 to LiczbaWierszy-1 do
+  begin
+    WierszPelny[Wiersz]:=True;
+    for Kolumna:=0 to LiczbaKolumn-1 do
+      if IndeksyPol[Kolumna,Wiersz]=0 then
+      begin
+        WierszPelny[Wiersz]:=False;
+        Break;
+      end;
+    if WierszPelny[Wiersz] then ZnalezionoWiersz:=True;
+  end;
+  if not ZnalezionoWiersz then Exit;
+
+  DocelowyWiersz:=LiczbaWierszy-1;
+  for ZrodloWiersza:=LiczbaWierszy-1 downto 0 do
+    if not WierszPelny[ZrodloWiersza] then
+    begin
+      if DocelowyWiersz<>ZrodloWiersza then
+        for Kolumna:=0 to LiczbaKolumn-1 do
+        begin
+          IndeksyPol[Kolumna,DocelowyWiersz]:=
+            IndeksyPol[Kolumna,ZrodloWiersza];
+          KoloryPol[Kolumna,DocelowyWiersz]:=
+            KoloryPol[Kolumna,ZrodloWiersza];
+        end;
+      Dec(DocelowyWiersz);
+    end;
+  for Wiersz:=0 to DocelowyWiersz do
+    for Kolumna:=0 to LiczbaKolumn-1 do
+    begin
+      IndeksyPol[Kolumna,Wiersz]:=0;
+      KoloryPol[Kolumna,Wiersz]:=clSilver;
+    end;
+
+  for Indeks:=1 to MaxLiczbaC do
+    Cegielki[Indeks].LP:=0;
+  NrCegielki:=0;
+
+  for Wiersz:=0 to LiczbaWierszy-1 do
+    for Kolumna:=0 to LiczbaKolumn-1 do
+      if (IndeksyPol[Kolumna,Wiersz]>0) and
+         not OdwiedzonePola[Kolumna,Wiersz] then
+      begin
+        NumerCegly:=IndeksyPol[Kolumna,Wiersz];
+        GlowaKolejki:=1;
+        OgonKolejki:=1;
+        Kolejka[1]:=Point(Kolumna,Wiersz);
+        OdwiedzonePola[Kolumna,Wiersz]:=True;
+        while GlowaKolejki<=OgonKolejki do
+        begin
+          X:=Kolejka[GlowaKolejki].X;
+          Y:=Kolejka[GlowaKolejki].Y;
+          Inc(GlowaKolejki);
+          if (X>0) and (IndeksyPol[X-1,Y]=NumerCegly) and
+             not OdwiedzonePola[X-1,Y] then
+          begin
+            Inc(OgonKolejki);
+            Kolejka[OgonKolejki]:=Point(X-1,Y);
+            OdwiedzonePola[X-1,Y]:=True;
+          end;
+          if (X<LiczbaKolumn-1) and
+             (IndeksyPol[X+1,Y]=NumerCegly) and
+             not OdwiedzonePola[X+1,Y] then
+          begin
+            Inc(OgonKolejki);
+            Kolejka[OgonKolejki]:=Point(X+1,Y);
+            OdwiedzonePola[X+1,Y]:=True;
+          end;
+          if (Y>0) and (IndeksyPol[X,Y-1]=NumerCegly) and
+             not OdwiedzonePola[X,Y-1] then
+          begin
+            Inc(OgonKolejki);
+            Kolejka[OgonKolejki]:=Point(X,Y-1);
+            OdwiedzonePola[X,Y-1]:=True;
+          end;
+          if (Y<LiczbaWierszy-1) and
+             (IndeksyPol[X,Y+1]=NumerCegly) and
+             not OdwiedzonePola[X,Y+1] then
+          begin
+            Inc(OgonKolejki);
+            Kolejka[OgonKolejki]:=Point(X,Y+1);
+            OdwiedzonePola[X,Y+1]:=True;
+          end;
+        end;
+
+        LiczbaKrawedzi:=0;
+        for IndeksPunktu:=1 to OgonKolejki do
+        begin
+          X:=Kolejka[IndeksPunktu].X;
+          Y:=Kolejka[IndeksPunktu].Y;
+          if Y=0 then
+            DodajKrawedz(Point(LMarg+X*SzerC,GMarg+Y*SzerC),
+              Point(LMarg+(X+1)*SzerC,GMarg+Y*SzerC))
+          else if IndeksyPol[X,Y-1]<>NumerCegly then
+            DodajKrawedz(Point(LMarg+X*SzerC,GMarg+Y*SzerC),
+              Point(LMarg+(X+1)*SzerC,GMarg+Y*SzerC));
+          if X=LiczbaKolumn-1 then
+            DodajKrawedz(Point(LMarg+(X+1)*SzerC,GMarg+Y*SzerC),
+              Point(LMarg+(X+1)*SzerC,GMarg+(Y+1)*SzerC))
+          else if IndeksyPol[X+1,Y]<>NumerCegly then
+            DodajKrawedz(Point(LMarg+(X+1)*SzerC,GMarg+Y*SzerC),
+              Point(LMarg+(X+1)*SzerC,GMarg+(Y+1)*SzerC));
+          if Y=LiczbaWierszy-1 then
+            DodajKrawedz(Point(LMarg+(X+1)*SzerC,GMarg+(Y+1)*SzerC),
+              Point(LMarg+X*SzerC,GMarg+(Y+1)*SzerC))
+          else if IndeksyPol[X,Y+1]<>NumerCegly then
+            DodajKrawedz(Point(LMarg+(X+1)*SzerC,GMarg+(Y+1)*SzerC),
+              Point(LMarg+X*SzerC,GMarg+(Y+1)*SzerC));
+          if X=0 then
+            DodajKrawedz(Point(LMarg+X*SzerC,GMarg+(Y+1)*SzerC),
+              Point(LMarg+X*SzerC,GMarg+Y*SzerC))
+          else if IndeksyPol[X-1,Y]<>NumerCegly then
+            DodajKrawedz(Point(LMarg+X*SzerC,GMarg+(Y+1)*SzerC),
+              Point(LMarg+X*SzerC,GMarg+Y*SzerC));
+        end;
+
+        FillChar(KrawedzUzyta,SizeOf(KrawedzUzyta),0);
+        Inc(NrCegielki);
+        if NrCegielki>MaxLiczbaC then
+          raise Exception.Create('Za duzo cegiel po usunieciu wiersza.');
+        Cegielki[NrCegielki].Kolor:=KoloryCegiel[NumerCegly];
+        LiczbaPunktow:=0;
+        IndeksKrawedzi:=1;
+        PunktPoczatkowy:=Krawedzie[IndeksKrawedzi].Poczatek;
+        repeat
+          if KrawedzUzyta[IndeksKrawedzi] then
+            raise Exception.Create('Nie mozna odtworzyc ksztaltu cegly.');
+          KrawedzUzyta[IndeksKrawedzi]:=True;
+          Inc(LiczbaPunktow);
+          if LiczbaPunktow>High(Cegielki[NrCegielki].P) then
+            raise Exception.Create('Ksztalt cegly ma za duzo punktow.');
+          Cegielki[NrCegielki].P[LiczbaPunktow]:=
+            Krawedzie[IndeksKrawedzi].Poczatek;
+          PunktKoncowy:=Krawedzie[IndeksKrawedzi].Koniec;
+          if (PunktKoncowy.X=PunktPoczatkowy.X) and
+             (PunktKoncowy.Y=PunktPoczatkowy.Y) then Break;
+
+          ZnalezionoKrawedz:=False;
+          for NastepnaKrawedz:=1 to LiczbaKrawedzi do
+            if not KrawedzUzyta[NastepnaKrawedz] and
+               (Krawedzie[NastepnaKrawedz].Poczatek.X=PunktKoncowy.X) and
+               (Krawedzie[NastepnaKrawedz].Poczatek.Y=PunktKoncowy.Y) then
+            begin
+              IndeksKrawedzi:=NastepnaKrawedz;
+              ZnalezionoKrawedz:=True;
+              Break;
+            end;
+          if not ZnalezionoKrawedz then
+            raise Exception.Create('Nie mozna zamknac ksztaltu cegly.');
+        until False;
+        Cegielki[NrCegielki].LP:=LiczbaPunktow;
+      end;
+end;
+
 procedure TForm1.RysujSiatke (Sender:TOBject);
 var i,x : Integer;
 begin
@@ -442,6 +693,8 @@ end;
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
   if (Grawitacja1.Checked) then PrzeunWszystkieCegielki(Sender);
+  if not GraZakonczona and not SieRuszaja then
+    UsunWypelnioneWiersze;
   MalujWszystkieCegielki (Sender);
   if (not GraZakonczona) and ((Not(SieRuszaja)){and(Not(BylKlawisz))}) then
   begin
@@ -753,7 +1006,7 @@ begin
       Exit;
     end;
     if (Kierunek=kpPrawo) and
-       (Cegielki[NrCegielki].P[Indeks].X+SzerC>MaxSzer) then
+       (Cegielki[NrCegielki].P[Indeks].X+SzerC>LMarg+MaxSzer) then
     begin
       Result:=False;
       Exit;
@@ -894,7 +1147,7 @@ begin
     MaxY:=Max(MaxY,ObroconaCegla.P[Indeks].Y);
   end;
 
-  if (MinX<LMarg) or (MaxX>MaxSzer) or
+  if (MinX<LMarg) or (MaxX>LMarg+MaxSzer) or
      (MinY<GMarg) or (MaxY>Form1.ClientHeight) then Exit;
 
   for IndeksStalejCegly:=1 to MaxLiczbaC do
