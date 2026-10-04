@@ -110,6 +110,7 @@ var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegie�ki
       SieRuszaja : Boolean;                        // 1 bezpiecznik generatora
       BylKlawisz : Boolean;                        // 2 bezpiecznik generatora
       GraZakonczona : Boolean;
+      CeglaZamrozona : array[1..MaxLiczbaC] of Boolean;
       Xstart     : Integer;
       Vtimera    : Integer;
            SzerC : Integer;                         // rozmiary podstawowej kostki
@@ -154,6 +155,7 @@ begin
   Punktacja:=0;
   PunktcjaStr:='';
   GraZakonczona:=False;
+  FillChar(CeglaZamrozona,SizeOf(CeglaZamrozona),0);
   MaxSzer:=((Form1.ClientWidth-LMarg-PMarg) div SzerC)*SzerC;
   Xstart:=LMarg+((MaxSzer div SzerC) div 2)*SzerC;
   LosujElement1(Sender);  
@@ -402,7 +404,7 @@ begin
   // przesuwanie wszystkich cegie�ek
   For i:=1 To MaxLiczbaC Do
   Begin
-    if (Cegielki[i].LP>0) then
+    if (Cegielki[i].LP>0) and not CeglaZamrozona[i] then
     begin
       // wyczy�cimy pomocnicz� cegie�k�:
       for j:=1 to 10 do C[j]:=Cegielki[i].P[1];
@@ -417,6 +419,9 @@ begin
       end;
     end;
   end;
+  if not SieRuszaja then
+    for i:=1 to NrCegielki do
+      if Cegielki[i].LP>0 then CeglaZamrozona[i]:=True;
 end;
 
 procedure TForm1.UsunWypelnioneWiersze;
@@ -443,6 +448,7 @@ var
   OdwiedzonePola: TPlanszaOdwiedzonych;
   WierszPelny: array[0..MaksymalnyRozmiarPlanszy-1] of Boolean;
   KoloryCegiel: array[1..MaxLiczbaC] of TColor;
+  ZamrozoneCegly: array[1..MaxLiczbaC] of Boolean;
   Kolejka: TListaKomorek;
   Krawedzie: TListaKrawedzi;
   LiczbaKolumn, LiczbaWierszy: Integer;
@@ -487,7 +493,10 @@ begin
       KoloryPol[Kolumna,Wiersz]:=clSilver;
   end;
   for Indeks:=1 to NrCegielki do
+  begin
     KoloryCegiel[Indeks]:=Cegielki[Indeks].Kolor;
+    ZamrozoneCegly[Indeks]:=CeglaZamrozona[Indeks];
+  end;
 
   for Indeks:=1 to NrCegielki do
     if Cegielki[Indeks].LP>0 then
@@ -640,6 +649,7 @@ begin
         if NrCegielki>MaxLiczbaC then
           raise Exception.Create('Za duzo cegiel po usunieciu wiersza.');
         Cegielki[NrCegielki].Kolor:=KoloryCegiel[NumerCegly];
+        CeglaZamrozona[NrCegielki]:=ZamrozoneCegly[NumerCegly];
         LiczbaPunktowBrzegowych:=0;
         IndeksKrawedzi:=1;
         PunktPoczatkowy:=Krawedzie[IndeksKrawedzi].Poczatek;
@@ -746,6 +756,7 @@ var
   IndeksCegly: Integer;
 begin
   if (NrCegielki<MaxLiczbaC) then Inc(NrCegielki);
+  CeglaZamrozona[NrCegielki]:=False;
   Case (Random(7)+1) Of
     1: ZrobZetke    (NrCegielki,Xstart,GMarg,(clred)    ,Sender);
     2: ZrobElke     (NrCegielki,Xstart,GMarg,(clblue)   ,Sender);
