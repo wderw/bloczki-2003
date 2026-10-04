@@ -108,6 +108,7 @@ var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegie�ki
      TajnaKartka : TBitmap;                        // deklaracja bitmapki
       SieRuszaja : Boolean;                        // 1 bezpiecznik generatora
       BylKlawisz : Boolean;                        // 2 bezpiecznik generatora
+      GraZakonczona : Boolean;
       Xstart     : Integer;
       Vtimera    : Integer;
            SzerC : Integer;                         // rozmiary podstawowej kostki
@@ -126,6 +127,7 @@ begin
   TajnaKartka.Canvas.Font.Color:=clGray;
   BylKlawisz:=False;                     // do zabezpieczenia losowania cegie�ek
   SieRuszaja:=false;                     // do zabezpieczenia losowania cegie�ek
+  GraZakonczona:=False;
   NrCegielki:=0;                         // nie ma �adnej cegie�ki
   Randomize;                             // uruchomienie generatora liczb losowych
   SzerC:=21;                             // wielko�c cegie�ki
@@ -150,6 +152,7 @@ begin
   Form1.Caption:='Nasze w�asne cegie�ki';
   Punktacja:=0;
   PunktcjaStr:='';
+  GraZakonczona:=False;
   MaxSzer:=((Form1.ClientWidth-LMarg-PMarg) div SzerC)*SzerC;
   Xstart:=LMarg+((MaxSzer div SzerC) div 2)*SzerC;
   LosujElement1(Sender);  
@@ -440,11 +443,12 @@ procedure TForm1.Timer1Timer(Sender: TObject);
 begin
   if (Grawitacja1.Checked) then PrzeunWszystkieCegielki(Sender);
   MalujWszystkieCegielki (Sender);
-  if ((Not(SieRuszaja)){and(Not(BylKlawisz))}) then
+  if (not GraZakonczona) and ((Not(SieRuszaja)){and(Not(BylKlawisz))}) then
   begin
     if (CzyGameOver(Sender)) then
     begin
      form1.caption:='Game Over';
+     GraZakonczona:=True;
     end
     else
     begin
@@ -456,6 +460,8 @@ begin
 end;
 
 procedure TForm1.LosujElement1 (Sender:TObject);
+var
+  IndeksCegly: Integer;
 begin
   if (NrCegielki<MaxLiczbaC) then Inc(NrCegielki);
   Case (Random(7)+1) Of
@@ -467,6 +473,17 @@ begin
     6: Zrobzetuszke (NrCegielki,Xstart,GMarg,($00C080FF),Sender);
     7: Zrobkwadracik(NrCegielki,Xstart,GMarg,(clfuchsia),Sender);
   End;
+
+  for IndeksCegly:=1 to NrCegielki-1 do
+    if (Cegielki[IndeksCegly].LP>0) and
+       CzyCeglyNakladajaSie(Cegielki[NrCegielki],
+                            Cegielki[IndeksCegly]) then
+    begin
+      Cegielki[NrCegielki].LP:=0;
+      Form1.Caption:='Game Over';
+      GraZakonczona:=True;
+      Exit;
+    end;
 end;
 
 procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
