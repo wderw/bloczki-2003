@@ -80,6 +80,11 @@ type
     { Private declarations }
     function CzyMoznaPrzesunacPoziomo(
       Kierunek: TKierunekPoziomy): Boolean;
+    function CzyPunktWewnatrzCegly(const SprawdzanaCegla: Cegla;
+      PunktX, PunktY: Integer): Boolean;
+    function CzyCeglyNakladajaSie(const PierwszaCegla,
+      DrugaCegla: Cegla): Boolean;
+    function CzyMoznaObrocic(const ObroconaCegla: Cegla): Boolean;
   public
     { Public declarations }
   end;
@@ -465,7 +470,9 @@ begin
 end;
 
 procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-var i : Integer;
+var
+  i : Integer;
+  ObroconaCegla: Cegla;
 begin
   BylKlawisz:=True;
   if (key=13) then
@@ -501,7 +508,9 @@ begin
   // obr�t
   if (key=32) then
   begin
-    Cegielki[NrCegielki]:=Obroocony(Cegielki[NrCegielki],Sender);
+    ObroconaCegla:=Obroocony(Cegielki[NrCegielki],Sender);
+    if CzyMoznaObrocic(ObroconaCegla) then
+      Cegielki[NrCegielki]:=ObroconaCegla;
   end;
   // ta linia przyspiesza reakcj� na naciskanie klawiszy
   MalujWszystkieCegielki (Sender);
@@ -693,27 +702,6 @@ var
   WartoscKierunku: Integer;
   WspolrzednaX, WspolrzednaY, KoniecOdcinka: Integer;
 
-  function CzyPunktWewnatrzCegly(const SprawdzanaCegla: Cegla;
-    const PunktX, PunktY: Integer): Boolean;
-  var
-    IndeksPunktu, PoprzedniIndeks: Integer;
-  begin
-    Result:=False;
-    PoprzedniIndeks:=SprawdzanaCegla.LP;
-    for IndeksPunktu:=1 to SprawdzanaCegla.LP do
-    begin
-      if (SprawdzanaCegla.P[IndeksPunktu].Y>PunktY) <>
-         (SprawdzanaCegla.P[PoprzedniIndeks].Y>PunktY) then
-      begin
-        if (SprawdzanaCegla.P[IndeksPunktu].X=
-            SprawdzanaCegla.P[PoprzedniIndeks].X) and
-           (PunktX<SprawdzanaCegla.P[IndeksPunktu].X) then
-          Result:=not Result;
-      end;
-      PoprzedniIndeks:=IndeksPunktu;
-    end;
-  end;
-
   function CzyPoleZajete(const PunktX, PunktY: Integer): Boolean;
   var
     IndeksInnejCegly: Integer;
@@ -722,8 +710,8 @@ var
     for IndeksInnejCegly:=1 to MaxLiczbaC do
       if (IndeksInnejCegly<>NrCegielki) and
          (Cegielki[IndeksInnejCegly].LP>0) and
-         CzyPunktWewnatrzCegly(Cegielki[IndeksInnejCegly],
-                               PunktX,PunktY) then
+         Self.CzyPunktWewnatrzCegly(Cegielki[IndeksInnejCegly],
+                                    PunktX,PunktY) then
       begin
         Result:=True;
         Exit;
@@ -795,6 +783,110 @@ begin
       end;
     end;
   end;
+end;
+
+function TForm1.CzyPunktWewnatrzCegly(const SprawdzanaCegla: Cegla;
+  PunktX, PunktY: Integer): Boolean;
+var
+  IndeksPunktu, PoprzedniIndeks: Integer;
+begin
+  Result:=False;
+  PoprzedniIndeks:=SprawdzanaCegla.LP;
+  for IndeksPunktu:=1 to SprawdzanaCegla.LP do
+  begin
+    if (SprawdzanaCegla.P[IndeksPunktu].Y>PunktY) <>
+       (SprawdzanaCegla.P[PoprzedniIndeks].Y>PunktY) then
+      if (SprawdzanaCegla.P[IndeksPunktu].X=
+          SprawdzanaCegla.P[PoprzedniIndeks].X) and
+         (PunktX<SprawdzanaCegla.P[IndeksPunktu].X) then
+        Result:=not Result;
+    PoprzedniIndeks:=IndeksPunktu;
+  end;
+end;
+
+function TForm1.CzyCeglyNakladajaSie(const PierwszaCegla,
+  DrugaCegla: Cegla): Boolean;
+var
+  Indeks: Integer;
+  PierwszaMinX, PierwszaMinY, PierwszaMaxX, PierwszaMaxY: Integer;
+  DrugaMinX, DrugaMinY, DrugaMaxX, DrugaMaxY: Integer;
+  WspolrzednaX, WspolrzednaY: Integer;
+begin
+  Result:=False;
+  if (PierwszaCegla.LP=0) or (DrugaCegla.LP=0) then Exit;
+
+  PierwszaMinX:=PierwszaCegla.P[1].X;
+  PierwszaMaxX:=PierwszaCegla.P[1].X;
+  PierwszaMinY:=PierwszaCegla.P[1].Y;
+  PierwszaMaxY:=PierwszaCegla.P[1].Y;
+  DrugaMinX:=DrugaCegla.P[1].X;
+  DrugaMaxX:=DrugaCegla.P[1].X;
+  DrugaMinY:=DrugaCegla.P[1].Y;
+  DrugaMaxY:=DrugaCegla.P[1].Y;
+
+  for Indeks:=2 to PierwszaCegla.LP do
+  begin
+    PierwszaMinX:=Min(PierwszaMinX,PierwszaCegla.P[Indeks].X);
+    PierwszaMaxX:=Max(PierwszaMaxX,PierwszaCegla.P[Indeks].X);
+    PierwszaMinY:=Min(PierwszaMinY,PierwszaCegla.P[Indeks].Y);
+    PierwszaMaxY:=Max(PierwszaMaxY,PierwszaCegla.P[Indeks].Y);
+  end;
+  for Indeks:=2 to DrugaCegla.LP do
+  begin
+    DrugaMinX:=Min(DrugaMinX,DrugaCegla.P[Indeks].X);
+    DrugaMaxX:=Max(DrugaMaxX,DrugaCegla.P[Indeks].X);
+    DrugaMinY:=Min(DrugaMinY,DrugaCegla.P[Indeks].Y);
+    DrugaMaxY:=Max(DrugaMaxY,DrugaCegla.P[Indeks].Y);
+  end;
+
+  WspolrzednaY:=Max(PierwszaMinY,DrugaMinY)+(SzerC div 2);
+  while WspolrzednaY<Min(PierwszaMaxY,DrugaMaxY) do
+  begin
+    WspolrzednaX:=Max(PierwszaMinX,DrugaMinX)+(SzerC div 2);
+    while WspolrzednaX<Min(PierwszaMaxX,DrugaMaxX) do
+    begin
+      if CzyPunktWewnatrzCegly(PierwszaCegla,WspolrzednaX,WspolrzednaY) and
+         CzyPunktWewnatrzCegly(DrugaCegla,WspolrzednaX,WspolrzednaY) then
+      begin
+        Result:=True;
+        Exit;
+      end;
+      Inc(WspolrzednaX,SzerC);
+    end;
+    Inc(WspolrzednaY,SzerC);
+  end;
+end;
+
+function TForm1.CzyMoznaObrocic(const ObroconaCegla: Cegla): Boolean;
+var
+  Indeks, IndeksStalejCegly: Integer;
+  MinX, MaxX, MinY, MaxY: Integer;
+begin
+  Result:=False;
+  if ObroconaCegla.LP=0 then Exit;
+
+  MinX:=ObroconaCegla.P[1].X;
+  MaxX:=ObroconaCegla.P[1].X;
+  MinY:=ObroconaCegla.P[1].Y;
+  MaxY:=ObroconaCegla.P[1].Y;
+  for Indeks:=2 to ObroconaCegla.LP do
+  begin
+    MinX:=Min(MinX,ObroconaCegla.P[Indeks].X);
+    MaxX:=Max(MaxX,ObroconaCegla.P[Indeks].X);
+    MinY:=Min(MinY,ObroconaCegla.P[Indeks].Y);
+    MaxY:=Max(MaxY,ObroconaCegla.P[Indeks].Y);
+  end;
+
+  if (MinX<LMarg) or (MaxX>MaxSzer) or
+     (MinY<GMarg) or (MaxY>Form1.ClientHeight) then Exit;
+
+  for IndeksStalejCegly:=1 to MaxLiczbaC do
+    if (IndeksStalejCegly<>NrCegielki) and
+       (Cegielki[IndeksStalejCegly].LP>0) and
+       CzyCeglyNakladajaSie(ObroconaCegla,
+         Cegielki[IndeksStalejCegly]) then Exit;
+
+  Result:=True;
 end;
 
 
