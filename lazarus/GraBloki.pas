@@ -431,6 +431,7 @@ type
     0..MaksymalnyRozmiarPlanszy-1] of Boolean;
   TListaKomorek = array[1..MaksymalnyRozmiarPlanszy*
     MaksymalnyRozmiarPlanszy] of TPoint;
+  TListaPunktow = array[1..40] of TPoint;
   TKrawedz = record
     Poczatek: TPoint;
     Koniec: TPoint;
@@ -451,9 +452,12 @@ var
   ZrodloWiersza, DocelowyWiersz: Integer;
   GlowaKolejki, OgonKolejki, LiczbaKrawedzi: Integer;
   IndeksKrawedzi, NastepnaKrawedz, LiczbaPunktow: Integer;
+  LiczbaPunktowBrzegowych, IndeksWierzcholka: Integer;
+  PoprzedniWierzcholek, NastepnyWierzcholek: Integer;
   NumerCegly: Integer;
   X, Y: Integer;
   PunktPoczatkowy, PunktKoncowy: TPoint;
+  PunktyBrzegowe: TListaPunktow;
   ZnalezionoWiersz, ZnalezionoKrawedz: Boolean;
   KrawedzUzyta: array[1..40] of Boolean;
 
@@ -636,17 +640,15 @@ begin
         if NrCegielki>MaxLiczbaC then
           raise Exception.Create('Za duzo cegiel po usunieciu wiersza.');
         Cegielki[NrCegielki].Kolor:=KoloryCegiel[NumerCegly];
-        LiczbaPunktow:=0;
+        LiczbaPunktowBrzegowych:=0;
         IndeksKrawedzi:=1;
         PunktPoczatkowy:=Krawedzie[IndeksKrawedzi].Poczatek;
         repeat
           if KrawedzUzyta[IndeksKrawedzi] then
             raise Exception.Create('Nie mozna odtworzyc ksztaltu cegly.');
           KrawedzUzyta[IndeksKrawedzi]:=True;
-          Inc(LiczbaPunktow);
-          if LiczbaPunktow>High(Cegielki[NrCegielki].P) then
-            raise Exception.Create('Ksztalt cegly ma za duzo punktow.');
-          Cegielki[NrCegielki].P[LiczbaPunktow]:=
+          Inc(LiczbaPunktowBrzegowych);
+          PunktyBrzegowe[LiczbaPunktowBrzegowych]:=
             Krawedzie[IndeksKrawedzi].Poczatek;
           PunktKoncowy:=Krawedzie[IndeksKrawedzi].Koniec;
           if (PunktKoncowy.X=PunktPoczatkowy.X) and
@@ -665,6 +667,33 @@ begin
           if not ZnalezionoKrawedz then
             raise Exception.Create('Nie mozna zamknac ksztaltu cegly.');
         until False;
+
+        LiczbaPunktow:=0;
+        for IndeksWierzcholka:=1 to LiczbaPunktowBrzegowych do
+        begin
+          PoprzedniWierzcholek:=IndeksWierzcholka-1;
+          if PoprzedniWierzcholek=0 then
+            PoprzedniWierzcholek:=LiczbaPunktowBrzegowych;
+          NastepnyWierzcholek:=IndeksWierzcholka+1;
+          if NastepnyWierzcholek>LiczbaPunktowBrzegowych then
+            NastepnyWierzcholek:=1;
+
+          if ((PunktyBrzegowe[IndeksWierzcholka].X-
+               PunktyBrzegowe[PoprzedniWierzcholek].X)*
+              (PunktyBrzegowe[NastepnyWierzcholek].Y-
+               PunktyBrzegowe[IndeksWierzcholka].Y) <>
+              (PunktyBrzegowe[IndeksWierzcholka].Y-
+               PunktyBrzegowe[PoprzedniWierzcholek].Y)*
+              (PunktyBrzegowe[NastepnyWierzcholek].X-
+               PunktyBrzegowe[IndeksWierzcholka].X)) then
+          begin
+            Inc(LiczbaPunktow);
+            if LiczbaPunktow>High(Cegielki[NrCegielki].P) then
+              raise Exception.Create('Ksztalt cegly ma za duzo punktow.');
+            Cegielki[NrCegielki].P[LiczbaPunktow]:=
+              PunktyBrzegowe[IndeksWierzcholka];
+          end;
+        end;
         Cegielki[NrCegielki].LP:=LiczbaPunktow;
       end;
 end;
