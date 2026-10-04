@@ -205,9 +205,9 @@ object Form3: TForm3
   object StaticText2: TStaticText
     Left = 248
     Top = 120
-    Width = 110
+    Width = 300
     Height = 17
-    Caption = '22 Kwietnia 2003 roku'
+    Caption = '22 Kwietnia 2003 roku - 4 Października 2026'
     TabOrder = 1
   end
 end
