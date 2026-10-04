@@ -1,0 +1,7 @@
+*.exe
+*.dcu
+*.ppu
+*.o
+*.res
+lib/
+*.~*
