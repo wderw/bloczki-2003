@@ -154,7 +154,8 @@ begin
   Sleep(500);
   Form1.Caption:='Nasze własne cegiełki';
   Punktacja:=0;
-  PunktcjaStr:='';
+  Str(Punktacja,PunktcjaStr);
+  while Length(PunktcjaStr)<4 do PunktcjaStr:=' '+PunktcjaStr;
   GraZakonczona:=False;
   FillChar(CeglaZamrozona,SizeOf(CeglaZamrozona),0);
   MaxSzer:=((Form1.ClientWidth-LMarg-PMarg) div SzerC)*SzerC;
@@ -457,6 +458,7 @@ var
   MinX, MaxX, MinY, MaxY: Integer;
   MinKolumna, MaxKolumna, MinWiersz, MaxWiersz: Integer;
   ZrodloWiersza, DocelowyWiersz: Integer;
+  LiczbaPelnychWierszy: Integer;
   GlowaKolejki, OgonKolejki, LiczbaKrawedzi: Integer;
   IndeksKrawedzi, NastepnaKrawedz, LiczbaPunktow: Integer;
   LiczbaPunktowBrzegowych, IndeksWierzcholka: Integer;
@@ -529,6 +531,7 @@ begin
     end;
 
   ZnalezionoWiersz:=False;
+  LiczbaPelnychWierszy:=0;
   for Wiersz:=0 to LiczbaWierszy-1 do
   begin
     WierszPelny[Wiersz]:=True;
@@ -538,9 +541,17 @@ begin
         WierszPelny[Wiersz]:=False;
         Break;
       end;
-    if WierszPelny[Wiersz] then ZnalezionoWiersz:=True;
+    if WierszPelny[Wiersz] then
+    begin
+      ZnalezionoWiersz:=True;
+      Inc(LiczbaPelnychWierszy);
+    end;
   end;
   if not ZnalezionoWiersz then Exit;
+
+  Inc(Punktacja,LiczbaPelnychWierszy);
+  Str(Punktacja,PunktcjaStr);
+  while Length(PunktcjaStr)<4 do PunktcjaStr:=' '+PunktcjaStr;
 
   DocelowyWiersz:=LiczbaWierszy-1;
   for ZrodloWiersza:=LiczbaWierszy-1 downto 0 do
@@ -946,54 +957,8 @@ begin
 end;
 
 function TForm1.SprawdzWypelnieniePlanszy (Sender:TOBject):Integer;
-var  lw,lk,w,k,xs,ys : Integer;
- LiczPuste,LiczPelne : Integer;
-      WszystkiePelne : Integer;
-      WszystkiePuste : Integer;
-             LiczbaR : Integer;
 begin
-  // liczenie ilości pól nie wykorzystanych
   SprawdzWypelnieniePlanszy:=0;
-  WszystkiePelne:=0;
-  WszystkiePuste:=0;
-  LiczbaR:=0;
-  xs:=(Form1.Width div 2)+(Szerc div 2);   // x początkowe
-  while (xs>0) do xs:=xs-SzerC;
-  ys:=(Form1.ClientHeight div 2);          // y początkowe
-  while (ys>0) do ys:=ys-SzerC;
-  lw:=Form1.ClientHeight div SzerC;
-  lk:=(Form1.Width div SzerC)-1;
-  for w:=1 to lw do
-  begin
-    LiczPelne:=0;
-    LiczPuste:=0;
-    for k:=1 to lk do
-    begin
-      if ((xs+k*SzerC>0)and(xs+k*SzerC<Form1.Width)and(ys+w*SzerC-2>0)and(ys+w*SzerC-2<Form1.ClientHeight)) then
-      if ((TajnaKartka.Canvas.Pixels[xs+k*SzerC,ys+w*SzerC-2]<>clSilver)and(TajnaKartka.Canvas.Pixels[xs+k*SzerC,ys+w*SzerC-2]<>clBlack)) then
-      begin
-        Inc(LiczPelne);
-        //if (LiczPelne>0) then TajnaKartka.Canvas.Pixels[xs+k*SzerC,ys+w*SzerC-2]:=clRed;
-      end
-      else
-      begin
-        Inc(LiczPuste);
-        //TajnaKartka.Canvas.Pixels[xs+k*SzerC,ys+w*SzerC-2]:=clGreen;
-      end;
-    end;
-    if (LiczPelne>0) then
-    begin
-      Inc(LiczbaR);    
-      WszystkiePelne:=WszystkiePelne+LiczPelne;
-      WszystkiePuste:=WszystkiePuste+LiczPuste;
-    end;
-  end;
-  if ((Not(SieRuszaja))and(WszystkiePuste>0)) then
-  begin
-    Punktacja:=Trunc(WszystkiePelne/(WszystkiePuste/(LiczbaR+1)));
-    Str(WszystkiePelne,PunktcjaStr);
-    While (Length(PunktcjaStr)<4) do PunktcjaStr:=' '+PunktcjaStr;
-  end;
   TajnaKartka.Canvas.Brush.Color:=clSilver;
   TajnaKartka.Canvas.Pen.Color:=$008100F1;
   TajnaKartka.Canvas.TextOut(Form1.ClientWidth-PMarg,2,PunktcjaStr);
