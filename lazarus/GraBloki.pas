@@ -14,6 +14,9 @@ type cegla = record
      Kolor : Tcolor;                 // kolor cegie�ka
      end;
 
+type
+  TKierunekPoziomy = (kpLewo, kpPrawo);
+
 
 type
   TForm1 = class(TForm)
@@ -75,6 +78,8 @@ type
 
   private
     { Private declarations }
+    function CzyMoznaPrzesunacPoziomo(
+      Kierunek: TKierunekPoziomy): Boolean;
   public
     { Public declarations }
   end;
@@ -672,26 +677,124 @@ begin
 end;
 
 function TForm1.CzyMoznaWLewo (Sender:TOBject):Boolean;
-var i : Integer;
 begin
-  // czy mo�na lec�c� cegie�ke przesun�c w lewo ?
-  CzyMoznaWLewo:=True;
-  for i:=1 to Cegielki[NrCegielki].LP do
-  begin
-   if (Cegielki[NrCegielki].P[i].X-SzerC<=0) then CzyMoznaWLewo:=False;
-  end;
+  CzyMoznaWLewo:=CzyMoznaPrzesunacPoziomo(kpLewo);
 end;
 
 function TForm1.CzyMoznaWPrawo (Sender:TOBject):Boolean;
-var i : Integer;
 begin
-  // czy mo�na lec�c� cegie�ke przesun�c w prawo ?
-  CzyMoznaWPrawo:=True;
-  for i:=1 to Cegielki[NrCegielki].LP do
+  CzyMoznaWPrawo:=CzyMoznaPrzesunacPoziomo(kpPrawo);
+end;
+
+function TForm1.CzyMoznaPrzesunacPoziomo(
+  Kierunek: TKierunekPoziomy): Boolean;
+var
+  Indeks, NastepnyIndeks: Integer;
+  WartoscKierunku: Integer;
+  WspolrzednaX, WspolrzednaY, KoniecOdcinka: Integer;
+
+  function CzyPunktWewnatrzCegly(const SprawdzanaCegla: Cegla;
+    const PunktX, PunktY: Integer): Boolean;
+  var
+    IndeksPunktu, PoprzedniIndeks: Integer;
   begin
-   if (Cegielki[NrCegielki].P[i].X>MaxSzer) then CzyMoznaWPrawo:=False;
+    Result:=False;
+    PoprzedniIndeks:=SprawdzanaCegla.LP;
+    for IndeksPunktu:=1 to SprawdzanaCegla.LP do
+    begin
+      if (SprawdzanaCegla.P[IndeksPunktu].Y>PunktY) <>
+         (SprawdzanaCegla.P[PoprzedniIndeks].Y>PunktY) then
+      begin
+        if (SprawdzanaCegla.P[IndeksPunktu].X=
+            SprawdzanaCegla.P[PoprzedniIndeks].X) and
+           (PunktX<SprawdzanaCegla.P[IndeksPunktu].X) then
+          Result:=not Result;
+      end;
+      PoprzedniIndeks:=IndeksPunktu;
+    end;
   end;
 
+  function CzyPoleZajete(const PunktX, PunktY: Integer): Boolean;
+  var
+    IndeksInnejCegly: Integer;
+  begin
+    Result:=False;
+    for IndeksInnejCegly:=1 to MaxLiczbaC do
+      if (IndeksInnejCegly<>NrCegielki) and
+         (Cegielki[IndeksInnejCegly].LP>0) and
+         CzyPunktWewnatrzCegly(Cegielki[IndeksInnejCegly],
+                               PunktX,PunktY) then
+      begin
+        Result:=True;
+        Exit;
+      end;
+  end;
+
+begin
+  if not (Ord(Kierunek) in [Ord(kpLewo), Ord(kpPrawo)]) then
+  begin
+    Result:=False;
+    Exit;
+  end;
+  WartoscKierunku:=Ord(Kierunek)*2-1;
+  Result:=True;
+
+  for Indeks:=1 to Cegielki[NrCegielki].LP do
+  begin
+    if (Kierunek=kpLewo) and
+       (Cegielki[NrCegielki].P[Indeks].X-SzerC<LMarg) then
+    begin
+      Result:=False;
+      Exit;
+    end;
+    if (Kierunek=kpPrawo) and
+       (Cegielki[NrCegielki].P[Indeks].X+SzerC>MaxSzer) then
+    begin
+      Result:=False;
+      Exit;
+    end;
+  end;
+
+  for Indeks:=1 to Cegielki[NrCegielki].LP do
+  begin
+    NastepnyIndeks:=Indeks+1;
+    if NastepnyIndeks>Cegielki[NrCegielki].LP then
+      NastepnyIndeks:=1;
+
+    if (Cegielki[NrCegielki].P[Indeks].X=
+        Cegielki[NrCegielki].P[NastepnyIndeks].X) and
+       (((Kierunek=kpPrawo) and
+         (Cegielki[NrCegielki].P[NastepnyIndeks].Y>
+          Cegielki[NrCegielki].P[Indeks].Y)) or
+        ((Kierunek=kpLewo) and
+         (Cegielki[NrCegielki].P[NastepnyIndeks].Y<
+          Cegielki[NrCegielki].P[Indeks].Y))) then
+    begin
+      WspolrzednaX:=Cegielki[NrCegielki].P[Indeks].X+
+                    WartoscKierunku*(SzerC div 2);
+      if Kierunek=kpPrawo then
+      begin
+        WspolrzednaY:=Cegielki[NrCegielki].P[Indeks].Y+(SzerC div 2);
+        KoniecOdcinka:=Cegielki[NrCegielki].P[NastepnyIndeks].Y;
+      end
+      else
+      begin
+        WspolrzednaY:=Cegielki[NrCegielki].P[NastepnyIndeks].Y+
+                      (SzerC div 2);
+        KoniecOdcinka:=Cegielki[NrCegielki].P[Indeks].Y;
+      end;
+
+      while WspolrzednaY<KoniecOdcinka do
+      begin
+        if CzyPoleZajete(WspolrzednaX,WspolrzednaY) then
+        begin
+          Result:=False;
+          Exit;
+        end;
+        Inc(WspolrzednaY,SzerC);
+      end;
+    end;
+  end;
 end;
 
 
