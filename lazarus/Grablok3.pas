@@ -1,6 +1,6 @@
 unit Grablok3;
 
-{$mode delphi}{$H+}{$codepage cp1250}
+{$mode delphi}{$H+}{$codepage utf8}
 
 interface
 

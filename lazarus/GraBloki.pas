@@ -1,6 +1,6 @@
 unit GraBloki;
 
-{$mode delphi}{$H+}{$codepage cp1250}
+{$mode delphi}{$H+}{$codepage utf8}
 
 interface
 
@@ -9,9 +9,9 @@ uses
   StdCtrls, ExtCtrls, Menus;
 
 type cegla = record
-        LP : Byte;                   // liczba punkt�w tworz�cych cegie�k�
-         P : Array[1..10] of TPoint; // punkty tworzace kszta�t cegie�ki
-     Kolor : Tcolor;                 // kolor cegie�ka
+        LP : Byte;                   // liczba punktów tworzących cegiełkę
+         P : Array[1..10] of TPoint; // punkty tworzące kształt cegiełki
+     Kolor : Tcolor;                 // kolor cegiełki
      end;
 
 type
@@ -85,6 +85,7 @@ type
     function CzyCeglyNakladajaSie(const PierwszaCegla,
       DrugaCegla: Cegla): Boolean;
     function CzyMoznaObrocic(const ObroconaCegla: Cegla): Boolean;
+    procedure ZakonczGre;
     procedure UsunWypelnioneWiersze;
   public
     { Public declarations }
@@ -102,10 +103,10 @@ uses GraBlok2, Grablok3;
 const LMarg      = 10;
       PMarg      = 70;                             // prawy na owocki
       GMarg      = 10;
-      MaxLiczbaC = 3000;                           // max. liczba cegie�ek
+      MaxLiczbaC = 3000;                           // max. liczba cegiełek
 
-var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegie�ki
-      NrCegielki : Integer;                        // numer aktualnej cegie�ki
+var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegiełki
+      NrCegielki : Integer;                        // numer aktualnej cegiełki
      TajnaKartka : TBitmap;                        // deklaracja bitmapki
       SieRuszaja : Boolean;                        // 1 bezpiecznik generatora
       BylKlawisz : Boolean;                        // 2 bezpiecznik generatora
@@ -122,17 +123,17 @@ var     Cegielki : Array[1..MaxLiczbaC] of Cegla;  // cegie�ki
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   TajnaKartka:=TBitmap.Create;           // tworzenie niewidocznej bitmapki
-  TajnaKartka.Height:=Form1.Height;      // wysoko�� niewidocznej bitmapki
-  TajnaKartka.Width:=Form1.Width;        // szeroko�� niewidocznej bitmapki
+  TajnaKartka.Height:=Form1.Height;      // wysokość niewidocznej bitmapki
+  TajnaKartka.Width:=Form1.Width;        // szerokość niewidocznej bitmapki
   TajnaKartka.Canvas.Font.Name:='Impact';
   TajnaKartka.Canvas.Font.Size:=24;
   TajnaKartka.Canvas.Font.Color:=clGray;
-  BylKlawisz:=False;                     // do zabezpieczenia losowania cegie�ek
-  SieRuszaja:=false;                     // do zabezpieczenia losowania cegie�ek
+  BylKlawisz:=False;                     // do zabezpieczenia losowania cegiełek
+  SieRuszaja:=false;                     // do zabezpieczenia losowania cegiełek
   GraZakonczona:=False;
-  NrCegielki:=0;                         // nie ma �adnej cegie�ki
+  NrCegielki:=0;                         // nie ma żadnej cegiełki
   Randomize;                             // uruchomienie generatora liczb losowych
-  SzerC:=21;                             // wielko�c cegie�ki
+  SzerC:=21;                             // wielkość cegiełki
   Vtimera:=500;  
   RestartGry(Sender);
 end;
@@ -151,7 +152,7 @@ begin
   TajnaKartka.Canvas.Brush.Color:=clSilver;
   TajnaKartka.Canvas.Rectangle(-1,-1,TajnaKartka.Width,TajnaKartka.Height);
   Sleep(500);
-  Form1.Caption:='Nasze w�asne cegie�ki';
+  Form1.Caption:='Nasze własne cegiełki';
   Punktacja:=0;
   PunktcjaStr:='';
   GraZakonczona:=False;
@@ -163,14 +164,14 @@ end;
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
-  // rozmiary palnszy s� sta�e
+  // rozmiary planszy są stałe
   Form1.Width:=692;
   Form1.Height:=499;
 end;
 
 procedure Tform1.ZrobCetke (NR,X,Y : Integer;Kolor:TColor; Sender:TObject);
  begin
- // Rysowanie kszta�tki "C"
+ // Rysowanie kształtki "C"
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=8;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -185,7 +186,7 @@ end;
 
 procedure Tform1.Zrobzetuszke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
- // rysowanie ma�ej zetuszki
+ // rysowanie małej zetuszki
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=8;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -210,7 +211,7 @@ end;
 
 procedure TForm1.ZrobZetke (NR,X,Y : Integer;Kolor:TColor; Sender:TObject);
 begin
-  // wstawienie kszta�tki "Z" do tablicy
+  // wstawienie kształtki "Z" do tablicy
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=8;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -225,7 +226,7 @@ end;
 
 procedure TForm1.ZrobElke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
-  // Rysowanie kszta�tki "L"
+  // Rysowanie kształtki "L"
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=6;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -238,7 +239,7 @@ end;
 
 procedure TForm1.ZrobKropka ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
-  // Rysowanie kszta�tki - kilka kwadracik�w
+  // Rysowanie kształtki - kilka kwadracików
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=4;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -248,7 +249,7 @@ begin
 end;
 procedure TForm1.ZrobTetke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
-// Rysowanie kszta�tki "T"
+// Rysowanie kształtki "T"
   Cegielki[NR].Kolor:=Kolor;
   Cegielki[NR].LP:=8;
   Cegielki[NR].P[1]:=Point(X,Y);
@@ -277,7 +278,7 @@ begin
   Ymax:=Obiekt[1].Y;
   // szukamy Ymax
   for i:=1 to LP-1  do if Obiekt[i].Y>Ymax then Ymax:=Obiekt[i].Y;
-  // sprawdzamy czy nie spad� do ko�ca
+  // sprawdzamy czy nie spadł do końca
   if (Ymax>=Form1.ClientHeight-SzerC) then
   begin
     CzyMozeSpadac:=False;
@@ -285,7 +286,7 @@ begin
   end;
   // szukamy Ymin.
   for i:=0 to LP  do if Obiekt[i].Y<Ymin then Ymin:=Obiekt[i].Y;
-  // wyznaczamy �rodki dla poziomych odcink�w
+  // wyznaczamy środki dla poziomych odcinków
   for i:=0 to LP-1 do
   begin
     PP:=i;
@@ -294,9 +295,9 @@ begin
     TajnaKartka.Canvas.Pen.Color:=clBlack;
     if (Obiekt[PP].Y=Obiekt[PK].Y) then
     begin
-      // ile b�dzie �rodk�w nad tym odcinkiem
+      // ile będzie środków nad tym odcinkiem
       LiczbaS:=Trunc((Abs(Obiekt[PP].X-Obiekt[PK].X))/SzerC);
-      // wyznaczamy wsp. �rodk�w p�l nad poziomymi kreskami
+      // wyznaczamy wsp. środków pól nad poziomymi kreskami
       For j:=0 to LiczbaS-1 Do
       Begin
         ys:=Obiekt[PP].Y-1;
@@ -308,7 +309,7 @@ begin
         begin
           xs:=Obiekt[PK].X+j*(SzerC)+(SzerC div 2);
         end;
-        // czy �rodek znajduje si� pod Ymin
+        // czy środek znajduje się pod Ymin
         if (ys>Ymin) then
         begin
           inc(NrS);
@@ -317,7 +318,7 @@ begin
       End;
     end;
   end;
-  // sprawdzamy czy pod kt�rym� �rodkiem jest inny �rodek
+  // sprawdzamy czy pod którymś środkiem jest inny środek
   For i:=1 to NrS Do
   Begin
     For j:=1 to NrS Do
@@ -335,13 +336,13 @@ begin
       end;
     End;
   End;
-  // I NA KONIEC SPRAWDZAMY CZY MO�E SPADA� CZY NIE !
+  // I NA KONIEC SPRAWDZAMY CZY MOŻE SPADAĆ CZY NIE !
   TestPomoc:=True;
   For i:=1 to NrS Do
   Begin
     if ((TS[i].X<>0)and(TS[i].Y<>0)) then
     begin
-      // Wsp�rz�dne testowanego miejsca
+      // Współrzędne testowanego miejsca
       XTST:=TS[i].x;
       YTST:=TS[i].y+SzerC div 2;
       // Kropki kontrolne
@@ -360,7 +361,7 @@ end;
 
 procedure TForm1.MalujWszystkieCegielki (Sender:TObject);
 var  i,j : Integer;
-       c : array[1..10] of TPoint;  // pomocnicza cegie�ka
+       c : array[1..10] of TPoint;  // pomocnicza cegiełka
 begin
   // Czyszczenie tajnej kartki
   TajnaKartka.Canvas.Brush.Color:=clSilver;
@@ -369,18 +370,18 @@ begin
   if (SP1.Checked) then RysujSiatke (Sender);
   // Punktacja
   TajnaKartka.Canvas.Pen.Color:=clBlack;
-  // Rysujemy teraz wszystkie cegie�ki
+  // Rysujemy teraz wszystkie cegiełki
   For i:=1 To MaxLiczbaC Do
   Begin
     if (Cegielki[i].LP>0) then
     begin
-      // wyczy�cimy pomocnicz� cegie�k�:
+      // wyczyścimy pomocniczą cegiełkę:
       for j:=1 to 10 do C[j]:=Cegielki[i].P[1];
       // a teraz wpisujemy do niej prawdziwe punkty:
       for j:=1 to Cegielki[i].LP do C[j]:=Cegielki[i].P[j];
-      // ustalamy kolor p�dzla
+      // ustalamy kolor pędzla
       TajnaKartka.Canvas.Brush.Color:=Cegielki[i].Kolor;
-      // i rysujemy j�.
+      // i rysujemy ją.
       TajnaKartka.Canvas.Polygon(C);
       TajnaKartka.Canvas.Polygon(C);
     end;
@@ -392,28 +393,28 @@ begin
   If (Punktacja>=4) then TajnaKartka.Canvas.Draw(625,328,Image2.Picture.Bitmap);
   If (Punktacja>=6) then TajnaKartka.Canvas.Draw(625,280,Image3.Picture.Bitmap);
   If (Punktacja>=8) then TajnaKartka.Canvas.Draw(624,224,Image4.Picture.Bitmap);
-  // Wy�wietlanie
+  // Wyświetlanie
   Form1.Canvas.Draw(0,0,TajnaKartka);
 end;
 
 procedure TForm1.PrzeunWszystkieCegielki (Sender:TObject);
 var i,j : Integer;
-      c : array[1..10] of TPoint;  // pomocnicza cegie�ka
+      c : array[1..10] of TPoint;  // pomocnicza cegiełka
 begin
   SieRuszaja:=False;
-  // przesuwanie wszystkich cegie�ek
+  // przesuwanie wszystkich cegiełek
   For i:=1 To MaxLiczbaC Do
   Begin
     if (Cegielki[i].LP>0) and not CeglaZamrozona[i] then
     begin
-      // wyczy�cimy pomocnicz� cegie�k�:
+      // wyczyścimy pomocniczą cegiełkę:
       for j:=1 to 10 do C[j]:=Cegielki[i].P[1];
       // a teraz wpisujemy do niej prawdziwe punkty:
       for j:=1 to Cegielki[i].LP do C[j]:=Cegielki[i].P[j];
-      // sprawdzimy czy mo�na cegie�k� przesun�� w d�
+      // sprawdzimy czy można cegiełkę przesunąć w dół
       if (CzyMozeSpadac(C,Cegielki[i].LP,Sender)) then
       begin
-        // je�eli mo�na to dodajemy do y szeroko�� cegie�ki SzerC
+        // jeżeli można to dodajemy do y szerokość cegiełki SzerC
         for j:=1 to Cegielki[i].LP do Cegielki[i].P[j].Y:=Cegielki[i].P[j].Y+SzerC;
         SieRuszaja:=True;
       end;
@@ -738,17 +739,26 @@ begin
   if (not GraZakonczona) and ((Not(SieRuszaja)){and(Not(BylKlawisz))}) then
   begin
     if (CzyGameOver(Sender)) then
-    begin
-     form1.caption:='Game Over';
-     GraZakonczona:=True;
-    end
+      ZakonczGre
     else
     begin
-      form1.caption:='Nasze w�asne cegie�ki';
+      form1.caption:='Nasze własne cegiełki';
       LosujElement1(Sender);
     end;
   end;
   BylKlawisz:=False;
+end;
+
+procedure TForm1.ZakonczGre;
+var
+  Komunikat: UnicodeString;
+begin
+  if GraZakonczona then Exit;
+  Form1.Caption:='Game Over';
+  GraZakonczona:=True;
+  Komunikat:=UTF8Decode('Koniec gry! Twój wynik: ');
+  Komunikat:=Komunikat+UnicodeString(Trim(PunktcjaStr));
+  ShowMessage(UTF8Encode(Komunikat));
 end;
 
 procedure TForm1.LosujElement1 (Sender:TObject);
@@ -773,8 +783,7 @@ begin
                             Cegielki[IndeksCegly]) then
     begin
       Cegielki[NrCegielki].LP:=0;
-      Form1.Caption:='Game Over';
-      GraZakonczona:=True;
+      ZakonczGre;
       Exit;
     end;
 end;
@@ -800,7 +809,7 @@ begin
   begin
     for i:=1 to Cegielki[NrCegielki].LP do Cegielki[NrCegielki].P[i].X:=Cegielki[NrCegielki].P[i].X+SzerC;
   end;
-  // szfung w d�
+  // skok w dół
   if (key=34) then
   begin
     for i:=1 to Trunc(Form1.Height/SzerC) do
@@ -815,14 +824,14 @@ begin
     timer1.interval:=Vtimera div 10;
     exit;
   end;
-  // obr�t
+  // obrót
   if (key=32) then
   begin
     ObroconaCegla:=Obroocony(Cegielki[NrCegielki],Sender);
     if CzyMoznaObrocic(ObroconaCegla) then
       Cegielki[NrCegielki]:=ObroconaCegla;
   end;
-  // ta linia przyspiesza reakcj� na naciskanie klawiszy
+  // ta linia przyspiesza reakcję na naciskanie klawiszy
   MalujWszystkieCegielki (Sender);
 end;
 
@@ -832,7 +841,7 @@ var Xmin,Ymin : Integer;
       i,Xs,Ys : Integer;
       Tymczas : Cegla;
 begin
-  // obracanie cegie�ek o +90 stopni:
+  // obracanie cegiełek o +90 stopni:
   Tymczas:=Obiekt;
   Xmin:= 9999;
   Ymin:= 9999;
@@ -846,10 +855,10 @@ begin
     if (Obiekt.P[i].Y>Ymax) then Ymax:=Obiekt.P[i].Y;
     if (Obiekt.P[i].Y<Ymin) then Ymin:=Obiekt.P[i].Y;
   end;
-  // wyznaczenie �rodka
+  // wyznaczenie środka
   Xs:=Xmin+((Xmax-Xmin) div Trunc((Xmax-Xmin)/SzerC));
   Ys:=Ymin+((Ymax-Ymin) div Trunc((Ymax-Ymin)/SzerC));
-  // zmiana wsp�rzednych
+  // zmiana współrzędnych
   for i:=1 to Obiekt.LP do
   begin
     Obiekt.P[i].X:=Xs-(Tymczas.P[i].Y-Ys);
@@ -943,14 +952,14 @@ var  lw,lk,w,k,xs,ys : Integer;
       WszystkiePuste : Integer;
              LiczbaR : Integer;
 begin
-  // liczenie ilo�ci p� nie wykorzystanych
+  // liczenie ilości pól nie wykorzystanych
   SprawdzWypelnieniePlanszy:=0;
   WszystkiePelne:=0;
   WszystkiePuste:=0;
   LiczbaR:=0;
-  xs:=(Form1.Width div 2)+(Szerc div 2);   // x pocz�tkowe
+  xs:=(Form1.Width div 2)+(Szerc div 2);   // x początkowe
   while (xs>0) do xs:=xs-SzerC;
-  ys:=(Form1.ClientHeight div 2);          // y pocz�tkowe
+  ys:=(Form1.ClientHeight div 2);          // y początkowe
   while (ys>0) do ys:=ys-SzerC;
   lw:=Form1.ClientHeight div SzerC;
   lk:=(Form1.Width div SzerC)-1;
