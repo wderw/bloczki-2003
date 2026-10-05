@@ -43,9 +43,15 @@ type
     Image5: TImage;
     procedure Zrobkwadracik ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
     procedure Zrobzetuszke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
+    procedure ZrobOdwroconaZetuszke(NR,X,Y: Integer; Kolor:TColor;
+      Sender:TObject);
     procedure ZrobZetke (NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
+    procedure ZrobOdwroconaZetke(NR,X,Y: Integer; Kolor:TColor;
+      Sender:TObject);
     procedure ZrobTetke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
     procedure ZrobElke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
+    procedure ZrobOdwroconaElke(NR,X,Y: Integer; Kolor:TColor;
+      Sender:TObject);
     procedure ZrobKropka ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
     function  CzyMozeSpadac(Obiekt : Array of TPoint; LP:Byte; Sender:TObject):Boolean;
     procedure ZrobCetke (NR,X,Y : Integer;Kolor:TColor; Sender:TObject);
@@ -200,6 +206,21 @@ begin
   Cegielki[NR].P[8]:=Point(X,Y+1*SzerC);
 end;
 
+procedure TForm1.ZrobOdwroconaZetuszke(NR,X,Y: Integer; Kolor:TColor;
+  Sender:TObject);
+begin
+  Cegielki[NR].Kolor:=Kolor;
+  Cegielki[NR].LP:=8;
+  Cegielki[NR].P[1]:=Point(X+1*SzerC,Y);
+  Cegielki[NR].P[2]:=Point(X+3*SzerC,Y);
+  Cegielki[NR].P[3]:=Point(X+3*SzerC,Y+1*SzerC);
+  Cegielki[NR].P[4]:=Point(X+2*SzerC,Y+1*SzerC);
+  Cegielki[NR].P[5]:=Point(X+2*SzerC,Y+2*SzerC);
+  Cegielki[NR].P[6]:=Point(X,Y+2*SzerC);
+  Cegielki[NR].P[7]:=Point(X,Y+1*SzerC);
+  Cegielki[NR].P[8]:=Point(X+1*SzerC,Y+1*SzerC);
+end;
+
 procedure TForm1.Zrobkwadracik ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
   Cegielki[NR].Kolor:=Kolor;
@@ -225,6 +246,21 @@ begin
   Cegielki[NR].P[8]:=Point(X        ,Y+1*SzerC);
 end;
 
+procedure TForm1.ZrobOdwroconaZetke(NR,X,Y: Integer; Kolor:TColor;
+  Sender:TObject);
+begin
+  Cegielki[NR].Kolor:=Kolor;
+  Cegielki[NR].LP:=8;
+  Cegielki[NR].P[1]:=Point(X+1*SzerC,Y);
+  Cegielki[NR].P[2]:=Point(X+3*SzerC,Y);
+  Cegielki[NR].P[3]:=Point(X+3*SzerC,Y+1*SzerC);
+  Cegielki[NR].P[4]:=Point(X+2*SzerC,Y+1*SzerC);
+  Cegielki[NR].P[5]:=Point(X+2*SzerC,Y+3*SzerC);
+  Cegielki[NR].P[6]:=Point(X,Y+3*SzerC);
+  Cegielki[NR].P[7]:=Point(X,Y+2*SzerC);
+  Cegielki[NR].P[8]:=Point(X+1*SzerC,Y+2*SzerC);
+end;
+
 procedure TForm1.ZrobElke ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
 begin
   // Rysowanie kształtki "L"
@@ -236,6 +272,19 @@ begin
   Cegielki[NR].P[4]:=Point(X+2*SzerC,Y+2*SzerC);
   Cegielki[NR].P[5]:=Point(X+2*SzerC,Y+3*SzerC);
   Cegielki[NR].P[6]:=Point(X,Y+3*SzerC);
+end;
+
+procedure TForm1.ZrobOdwroconaElke(NR,X,Y: Integer; Kolor:TColor;
+  Sender:TObject);
+begin
+  Cegielki[NR].Kolor:=Kolor;
+  Cegielki[NR].LP:=6;
+  Cegielki[NR].P[1]:=Point(X+1*SzerC,Y);
+  Cegielki[NR].P[2]:=Point(X+2*SzerC,Y);
+  Cegielki[NR].P[3]:=Point(X+2*SzerC,Y+3*SzerC);
+  Cegielki[NR].P[4]:=Point(X,Y+3*SzerC);
+  Cegielki[NR].P[5]:=Point(X,Y+2*SzerC);
+  Cegielki[NR].P[6]:=Point(X+1*SzerC,Y+2*SzerC);
 end;
 
 procedure TForm1.ZrobKropka ( NR,X,Y : Integer; Kolor:TColor; Sender:TObject);
@@ -778,14 +827,17 @@ var
 begin
   if (NrCegielki<MaxLiczbaC) then Inc(NrCegielki);
   CeglaZamrozona[NrCegielki]:=False;
-  Case (Random(7)+1) Of
-    1: ZrobZetke    (NrCegielki,Xstart,GMarg,(clred)    ,Sender);
-    2: ZrobElke     (NrCegielki,Xstart,GMarg,(clblue)   ,Sender);
-    3: ZrobKropka   (NrCegielki,Xstart,GMarg,(clyellow) ,Sender);
-    4: ZrobCetke    (NrCegielki,Xstart,GMarg,(cllime)   ,Sender);
-    5: ZrobTetke    (NrCegielki,Xstart,GMarg,($000080FF),Sender);
-    6: Zrobzetuszke (NrCegielki,Xstart,GMarg,($00C080FF),Sender);
-    7: Zrobkwadracik(NrCegielki,Xstart,GMarg,(clfuchsia),Sender);
+  Case (Random(10)+1) Of
+    1: ZrobZetke    (NrCegielki,Xstart,GMarg,clRed,Sender);
+    2: ZrobElke     (NrCegielki,Xstart,GMarg,clBlue,Sender);
+    3: ZrobKropka   (NrCegielki,Xstart,GMarg,clYellow,Sender);
+    4: ZrobCetke    (NrCegielki,Xstart,GMarg,clLime,Sender);
+    5: ZrobTetke    (NrCegielki,Xstart,GMarg,$000080FF,Sender);
+    6: Zrobzetuszke (NrCegielki,Xstart,GMarg,$00C080FF,Sender);
+    7: Zrobkwadracik(NrCegielki,Xstart,GMarg,clFuchsia,Sender);
+    8: ZrobOdwroconaZetke(NrCegielki,Xstart,GMarg,RGB(0,100,0),Sender);
+    9: ZrobOdwroconaElke(NrCegielki,Xstart,GMarg,RGB(173,216,230),Sender);
+   10: ZrobOdwroconaZetuszke(NrCegielki,Xstart,GMarg,clPurple,Sender);
   End;
 
   for IndeksCegly:=1 to NrCegielki-1 do
