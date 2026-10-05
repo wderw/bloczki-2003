@@ -35,6 +35,7 @@ type
     Normalne1: TMenuItem;
     Dlaprofesjonalistw1: TMenuItem;
     Grawitacja1: TMenuItem;
+    KlasycznyTetris1: TMenuItem;
     Image1: TImage;
     Image2: TImage;
     SP1: TMenuItem;
@@ -78,6 +79,7 @@ type
     procedure Normalne1Click(Sender: TObject);
     procedure Dlaprofesjonalistw1Click(Sender: TObject);
     procedure Grawitacja1Click(Sender: TObject);
+    procedure KlasycznyTetris1Click(Sender: TObject);
     procedure SP1Click(Sender: TObject);
     function  CzyMoznaWPrawo (Sender:TOBject):Boolean;
     function  CzyMoznaWLewo (Sender:TOBject):Boolean;
@@ -831,21 +833,39 @@ end;
 procedure TForm1.LosujElement1 (Sender:TObject);
 var
   IndeksCegly: Integer;
+  LosowyKsztalt: Integer;
 begin
   if (NrCegielki<MaxLiczbaC) then Inc(NrCegielki);
   CeglaZamrozona[NrCegielki]:=False;
-  Case (Random(10)+1) Of
-    1: ZrobZetke    (NrCegielki,Xstart,GMarg,clRed,Sender);
-    2: ZrobElke     (NrCegielki,Xstart,GMarg,clBlue,Sender);
-    3: ZrobKropka   (NrCegielki,Xstart,GMarg,clYellow,Sender);
-    4: ZrobCetke    (NrCegielki,Xstart,GMarg,clLime,Sender);
-    5: ZrobTetke    (NrCegielki,Xstart,GMarg,$000080FF,Sender);
-    6: Zrobzetuszke (NrCegielki,Xstart,GMarg,$00C080FF,Sender);
-    7: Zrobkwadracik(NrCegielki,Xstart,GMarg,clFuchsia,Sender);
-    8: ZrobOdwroconaZetke(NrCegielki,Xstart,GMarg,RGB(0,100,0),Sender);
-    9: ZrobOdwroconaElke(NrCegielki,Xstart,GMarg,RGB(173,216,230),Sender);
-   10: ZrobOdwroconaZetuszke(NrCegielki,Xstart,GMarg,clPurple,Sender);
-  End;
+  if KlasycznyTetris1.Checked then
+  begin
+    LosowyKsztalt:=Random(7)+1;
+    Case LosowyKsztalt Of
+      1: ZrobElke(NrCegielki,Xstart,GMarg,clBlue,Sender);
+      2: ZrobKropka(NrCegielki,Xstart,GMarg,clYellow,Sender);
+      3: ZrobTetke(NrCegielki,Xstart,GMarg,$000080FF,Sender);
+      4: Zrobzetuszke(NrCegielki,Xstart,GMarg,$00C080FF,Sender);
+      5: Zrobkwadracik(NrCegielki,Xstart,GMarg,clFuchsia,Sender);
+      6: ZrobOdwroconaElke(NrCegielki,Xstart,GMarg,clBlue,Sender);
+      7: ZrobOdwroconaZetuszke(NrCegielki,Xstart,GMarg,$00C080FF,Sender);
+    end;
+  end
+  else
+  begin
+    LosowyKsztalt:=Random(10)+1;
+    Case LosowyKsztalt Of
+      1: ZrobZetke(NrCegielki,Xstart,GMarg,clRed,Sender);
+      2: ZrobElke(NrCegielki,Xstart,GMarg,clBlue,Sender);
+      3: ZrobKropka(NrCegielki,Xstart,GMarg,clYellow,Sender);
+      4: ZrobCetke(NrCegielki,Xstart,GMarg,clLime,Sender);
+      5: ZrobTetke(NrCegielki,Xstart,GMarg,$000080FF,Sender);
+      6: Zrobzetuszke(NrCegielki,Xstart,GMarg,$00C080FF,Sender);
+      7: Zrobkwadracik(NrCegielki,Xstart,GMarg,clFuchsia,Sender);
+      8: ZrobOdwroconaZetke(NrCegielki,Xstart,GMarg,clRed,Sender);
+      9: ZrobOdwroconaElke(NrCegielki,Xstart,GMarg,clBlue,Sender);
+     10: ZrobOdwroconaZetuszke(NrCegielki,Xstart,GMarg,$00C080FF,Sender);
+    end;
+  end;
 
   for IndeksCegly:=1 to NrCegielki-1 do
     if (Cegielki[IndeksCegly].LP>0) and
@@ -1013,6 +1033,11 @@ end;
 procedure TForm1.Grawitacja1Click(Sender: TObject);
 begin
   Grawitacja1.checked:=not(Grawitacja1.checked);
+end;
+
+procedure TForm1.KlasycznyTetris1Click(Sender: TObject);
+begin
+  KlasycznyTetris1.Checked:=not KlasycznyTetris1.Checked;
 end;
 
 function TForm1.SprawdzWypelnieniePlanszy (Sender:TOBject):Integer;

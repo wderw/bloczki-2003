@@ -530,6 +530,10 @@ object Form1: TForm1
         ShortCut = 27
         OnClick = Grawitacja1Click
       end
+      object KlasycznyTetris1: TMenuItem
+        Caption = 'Klasyczny Tetris (7 kształtów)'
+        OnClick = KlasycznyTetris1Click
+      end
       object SP1: TMenuItem
         Caption = 'Siatka pomocnicza'
         Checked = True
