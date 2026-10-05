@@ -443,6 +443,13 @@ begin
   If (Punktacja>=4) then TajnaKartka.Canvas.Draw(625,328,Image2.Picture.Bitmap);
   If (Punktacja>=6) then TajnaKartka.Canvas.Draw(625,280,Image3.Picture.Bitmap);
   If (Punktacja>=8) then TajnaKartka.Canvas.Draw(624,224,Image4.Picture.Bitmap);
+  TajnaKartka.Canvas.Pen.Color:=clBlack;
+  TajnaKartka.Canvas.Pen.Width:=2;
+  TajnaKartka.Canvas.Brush.Style:=bsClear;
+  TajnaKartka.Canvas.Rectangle(LMarg-2,GMarg-2,LMarg+MaxSzer+2,
+    Form1.ClientHeight+2);
+  TajnaKartka.Canvas.Pen.Width:=1;
+  TajnaKartka.Canvas.Brush.Style:=bsSolid;
   // Wyświetlanie
   Form1.Canvas.Draw(0,0,TajnaKartka);
 end;
